@@ -707,7 +707,32 @@ function renderSeasonTable() {
           timeData[periodNum][idx] = newVal;
           localStorage.setItem("timeData", JSON.stringify(timeData));
         };
+// --- Torbild Reset Button (nur Marker + Timeboxen) ---
+const torbildResetBtn = document.getElementById("resetTorbildBtn");
 
+if (torbildResetBtn) {
+  torbildResetBtn.addEventListener("click", () => {
+    const sicher = confirm("Goalmarkers zurücksetzen?");
+    if (!sicher) return;
+
+    // 1️⃣ Alle Marker entfernen
+    document.querySelectorAll(".marker-dot").forEach(d => d.remove());
+
+    // 2️⃣ Timeboxen auf 0 zurücksetzen
+    if (timeTrackingBox) {
+      let timeData = JSON.parse(localStorage.getItem("timeData")) || {};
+      timeTrackingBox.querySelectorAll(".period").forEach(period => {
+        const periodNum = period.dataset.period || Math.random().toString(36).slice(2,6);
+        period.querySelectorAll(".time-btn").forEach((btn, idx) => {
+          btn.textContent = 0;
+          if (!timeData[periodNum]) timeData[periodNum] = {};
+          timeData[periodNum][idx] = 0;
+        });
+      });
+      localStorage.setItem("timeData", JSON.stringify(timeData));
+    }
+  });
+}
         // Desktop click with double-click detection -> double = -1, single = +1
         btn.addEventListener("click", () => {
           const now = Date.now();
