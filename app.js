@@ -2,7 +2,7 @@
 // DOMContentLoaded - Initial Setup, DOM-Refs, Data, Sticky Header, Player Selection render + confirm
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Script geladen – Start funktioniert");
+console.log("Script geladen – Start funktioniert");
   // --- Elements ---
   const pages = {
     selection: document.getElementById("playerSelectionPage"),
@@ -708,35 +708,6 @@ function renderSeasonTable() {
           timeData[periodNum][idx] = newVal;
           localStorage.setItem("timeData", JSON.stringify(timeData));
         };
-// --- Torbild Reset Button (nur Marker + Timeboxen) ---
-const torbildResetBtn = document.getElementById("resetTorbildBtn");
-
-if (torbildResetBtn) {
-  torbildResetBtn.addEventListener("click", (e) => {
-    e.preventDefault(); // verhindert eventuelle doppelte Trigger
-    e.stopPropagation();
-
-    const sicher = confirm("Goalmarkers zurücksetzen?");
-    if (!sicher) return;
-
-    // --- 1️⃣ Alle Marker-Punkte im Torbild entfernen ---
-    const markers = document.querySelectorAll(".marker-dot");
-    markers.forEach(dot => dot.remove());
-
-    // --- 2️⃣ Alle Zahlen in den Time-Buttons auf 0 setzen ---
-    const timeButtons = document.querySelectorAll("#timeTrackingBox .time-btn");
-    timeButtons.forEach(btn => btn.textContent = "0");
-
-    // --- 3️⃣ Lokale Speicherwerte löschen (nur Torbild-relevant) ---
-    localStorage.removeItem("goalMarkers");
-    localStorage.removeItem("timeData");
-
-    // --- 4️⃣ Erfolgsmeldung erst NACH DOM-Update anzeigen ---
-    requestAnimationFrame(() => {
-      alert("Goalmarkers und Time-Buttons wurden erfolgreich zurückgesetzt.");
-    });
-  });
-}
 } }        // Desktop click with double-click detection -> double = -1, single = +1
         btn.addEventListener("click", () => {
           const now = Date.now();
@@ -780,6 +751,32 @@ if (torbildResetBtn) {
 
   // --- Final init and restore state on load ---
   renderPlayerSelection();
+// --- Torbild Reset Button (nur Marker + Timeboxen) ---
+const torbildResetBtn = document.getElementById("resetTorbildBtn");
+
+if (torbildResetBtn) {
+  torbildResetBtn.addEventListener("click", () => {
+    const sicher = confirm("Goalmarkers zurücksetzen?");
+    if (!sicher) return;
+
+    // 1️⃣ Alle Marker entfernen
+    document.querySelectorAll(".marker-dot").forEach(d => d.remove());
+
+    // 2️⃣ Timeboxen auf 0 zurücksetzen
+    if (timeTrackingBox) {
+      let timeData = JSON.parse(localStorage.getItem("timeData")) || {};
+      timeTrackingBox.querySelectorAll(".period").forEach(period => {
+        const periodNum = period.dataset.period || Math.random().toString(36).slice(2,6);
+        period.querySelectorAll(".time-btn").forEach((btn, idx) => {
+          btn.textContent = 0;
+          if (!timeData[periodNum]) timeData[periodNum] = {};
+          timeData[periodNum][idx] = 0;
+        });
+      });
+      localStorage.setItem("timeData", JSON.stringify(timeData));
+    }
+  });
+}
 
   const lastPage = localStorage.getItem("currentPage") || (selectedPlayers.length ? "stats" : "selection");
   if (lastPage === "stats") {
