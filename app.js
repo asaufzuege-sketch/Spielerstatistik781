@@ -726,9 +726,12 @@ if (torbildResetBtn) {
     localStorage.removeItem("goalMarkers");
     localStorage.removeItem("timeData");
 
-    alert("Goalmarkers und Time-Buttons wurden zurückgesetzt.");
+    // 🔹 4. Meldung erst NACH dem visuellen Update zeigen
+    setTimeout(() => {
+      alert("Goalmarkers und Time-Buttons wurden zurückgesetzt.");
+    }, 50);
   });
-}        // Desktop click with double-click detection -> double = -1, single = +1
+} }        // Desktop click with double-click detection -> double = -1, single = +1
         btn.addEventListener("click", () => {
           const now = Date.now();
           const diff = now - lastTap;
