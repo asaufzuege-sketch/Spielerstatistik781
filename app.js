@@ -2,6 +2,7 @@
 // DOMContentLoaded - Initial Setup, DOM-Refs, Data, Sticky Header, Player Selection render + confirm
 
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("Script geladen – Start funktioniert");
   // --- Elements ---
   const pages = {
     selection: document.getElementById("playerSelectionPage"),
