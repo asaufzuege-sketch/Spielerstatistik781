@@ -586,7 +586,7 @@ const categories = ["Shot", "Goals", "Assist", "+/-", "FaceOffs", "FaceOffs Won"
 // app.js (Teil 4 von 4)
 // Season table, time-tracking buttons at torbild page, final init and helpers
 
-  // --- Season table rendering ---
+// --- Season table rendering ---
 function renderSeasonTable() {
   const container = document.getElementById("seasonContainer");
   if (!container) return;
@@ -595,9 +595,8 @@ function renderSeasonTable() {
   const table = document.createElement("table");
   table.className = "stats-table";
 
-  // Header-Zeile erzeugen
   const headerCols = [
-    "Points", "MVP", "Nr", "Name", "Spieler", "Games", 
+    "Points", "MVP", "Nr", "Name", "Spieler", "Games",
     "Goals", "Assists", "Points", "+/-", "Ø +/-",
     "Shots", "Shots/Game", "Goals/Game", "Points/Game",
     "Penalty", "Goal Value", "FaceOffs", "FaceOffs Won", "FaceOffs %", "Time"
@@ -611,11 +610,10 @@ function renderSeasonTable() {
   });
   table.appendChild(headerRow);
 
-  // Spielerzeilen
   players.forEach(player => {
     const stats = statsData[player.name] || {};
     const timeSeconds = playerTimes[player.name] || 0;
-    const games = stats.Games || 1; // mindestens 1 Spiel
+    const games = stats.Games || 1;
     const goals = stats.Goals || 0;
     const assists = stats.Assist || 0;
     const points = goals + assists;
@@ -627,36 +625,18 @@ function renderSeasonTable() {
     const faceOffPercent = faceOffs ? Math.round((faceOffsWon / faceOffs) * 100) : 0;
     const goalValue = shots ? Math.round((goals / shots) * 100) : 0;
 
-    const mm = String(Math.floor(timeSeconds / 60)).padStart(2,"0");
-    const ss = String(timeSeconds % 60).padStart(2,"0");
+    const mm = String(Math.floor(timeSeconds / 60)).padStart(2, "0");
+    const ss = String(timeSeconds % 60).padStart(2, "0");
     const timeStr = `${mm}:${ss}`;
 
     const tr = document.createElement("tr");
-    const cells = [
-      points,           // Points
-      "",               // MVP (leer)
-      player.num || "", // Nr
-      player.name,      // Name
-      player.name,      // Spieler
-      games,            // Games
-      goals,            // Goals
-      assists,          // Assists
-      points,           // Points
-      plusMinus,        // +/-
-      Math.round(plusMinus / games), // Ø +/-
-      shots,            // Shots
-      (shots / games).toFixed(2),    // Shots/Game
-      (goals / games).toFixed(2),    // Goals/Game
-      (points / games).toFixed(2),   // Points/Game
-      penalty,          // Penalty
-      goalValue,        // Goal Value
-      faceOffs,         // FaceOffs
-      faceOffsWon,      // FaceOffs Won
-      faceOffPercent + "%", // FaceOff %
-      timeStr           // Time
-    ];
-
-    cells.forEach(c => {
+    [
+      points, "", player.num || "", player.name, player.name, games,
+      goals, assists, points, plusMinus, Math.round(plusMinus / games),
+      shots, (shots / games).toFixed(2), (goals / games).toFixed(2),
+      (points / games).toFixed(2), penalty, goalValue, faceOffs,
+      faceOffsWon, faceOffPercent + "%", timeStr
+    ].forEach(c => {
       const td = document.createElement("td");
       td.textContent = c;
       tr.appendChild(td);
@@ -666,140 +646,138 @@ function renderSeasonTable() {
   });
 
   container.appendChild(table);
-}  // --- Pages navigation helpers (already bound earlier but ensure correctness) ---
-  function showPage(page) {
-    Object.values(pages).forEach(p => { if (p) p.style.display = "none"; });
-    if (pages[page]) pages[page].style.display = "block";
-    localStorage.setItem("currentPage", page);
-    setTimeout(updateStickyHeaderHeight, 50);
-  }
+}
 
-  selectPlayersBtn.addEventListener("click", () => showPage("selection"));
-  torbildBtn.addEventListener("click", () => showPage("torbild"));
-  backToStatsBtn.addEventListener("click", () => showPage("stats"));
-  backToStatsFromSeasonBtn.addEventListener("click", () => showPage("stats"));
-  seasonBtn.addEventListener("click", () => { showPage("season"); renderSeasonTable(); });
+// --- Pages navigation ---
+function showPage(page) {
+  Object.values(pages).forEach(p => { if (p) p.style.display = "none"; });
+  if (pages[page]) pages[page].style.display = "block";
+  localStorage.setItem("currentPage", page);
+  setTimeout(updateStickyHeaderHeight, 50);
+}
 
-  // --- Time tracking buttons in torbild (the grid of buttons) ---
-  const timeTrackingBox = document.getElementById("timeTrackingBox");
-  if (timeTrackingBox) {
-    // read stored structure or empty object
-    let timeData = JSON.parse(localStorage.getItem("timeData")) || {};
+selectPlayersBtn.addEventListener("click", () => showPage("selection"));
+torbildBtn.addEventListener("click", () => showPage("torbild"));
+backToStatsBtn.addEventListener("click", () => showPage("stats"));
+backToStatsFromSeasonBtn.addEventListener("click", () => showPage("stats"));
+seasonBtn.addEventListener("click", () => { showPage("season"); renderSeasonTable(); });
 
-    timeTrackingBox.querySelectorAll(".period").forEach(period => {
-      const periodNum = period.dataset.period || Math.random().toString(36).slice(2,6);
-      const buttons = period.querySelectorAll(".time-btn");
+// --- Time tracking buttons in torbild ---
+const timeTrackingBox = document.getElementById("timeTrackingBox");
+if (timeTrackingBox) {
+  let timeData = JSON.parse(localStorage.getItem("timeData")) || {};
 
-      buttons.forEach((btn, idx) => {
-        // initialize textual display from stored value or default to 0 (force 0 if no stored)
-        const hasStored = (timeData[periodNum] && typeof timeData[periodNum][idx] !== "undefined");
-        const stored = hasStored ? Number(timeData[periodNum][idx]) : 0;
-        btn.textContent = stored;
+  timeTrackingBox.querySelectorAll(".period").forEach(period => {
+    const periodNum = period.dataset.period || Math.random().toString(36).slice(2, 6);
+    const buttons = period.querySelectorAll(".time-btn");
 
-        let lastTap = 0;
-        let clickTimeout = null;
-        let touchStart = 0;
+    buttons.forEach((btn, idx) => {
+      const stored = timeData[periodNum]?.[idx] ?? 0;
+      btn.textContent = stored;
 
-        const updateValue = (delta) => {
-          const current = Number(btn.textContent) || 0;
-          const newVal = Math.max(0, current + delta);
-          btn.textContent = newVal;
-          if (!timeData[periodNum]) timeData[periodNum] = {};
-          timeData[periodNum][idx] = newVal;
-          localStorage.setItem("timeData", JSON.stringify(timeData));
-        };
-} }        // Desktop click with double-click detection -> double = -1, single = +1
-        btn.addEventListener("click", () => {
-          const now = Date.now();
-          const diff = now - lastTap;
-          if (diff < 300) {
-            // double click -> -1
-            if (clickTimeout) { clearTimeout(clickTimeout); clickTimeout = null; }
-            updateValue(-1);
-            lastTap = 0;
-          } else {
-            // single click -> +1 (delay to allow double click)
-            clickTimeout = setTimeout(() => { updateValue(+1); clickTimeout = null; }, 300);
-            lastTap = now;
-          }
-        });
+      let lastTap = 0;
+      let clickTimeout = null;
+      let touchStart = 0;
 
-        // touch handling (double tap logic)
-        btn.addEventListener("touchstart", (e) => {
-          const now = Date.now();
-          const diff = now - touchStart;
-          if (diff < 300) {
-            // double tap
-            e.preventDefault();
-            if (clickTimeout) { clearTimeout(clickTimeout); clickTimeout = null; }
-            updateValue(-1);
-            touchStart = 0;
-          } else {
-            touchStart = now;
-            // wait a little before single-tap increments, to allow double-tap
-            setTimeout(() => {
-              if (touchStart !== 0) {
-                updateValue(+1);
-                touchStart = 0;
-              }
-            }, 300);
-          }
-        }, { passive: true });
+      const updateValue = (delta) => {
+        const current = Number(btn.textContent) || 0;
+        const newVal = Math.max(0, current + delta);
+        btn.textContent = newVal;
+        if (!timeData[periodNum]) timeData[periodNum] = {};
+        timeData[periodNum][idx] = newVal;
+        localStorage.setItem("timeData", JSON.stringify(timeData));
+      };
+
+      // Desktop clicks
+      btn.addEventListener("click", () => {
+        const now = Date.now();
+        if (now - lastTap < 300) {
+          if (clickTimeout) clearTimeout(clickTimeout);
+          updateValue(-1);
+          lastTap = 0;
+        } else {
+          clickTimeout = setTimeout(() => updateValue(+1), 250);
+          lastTap = now;
+        }
       });
+
+      // Touch events
+      btn.addEventListener("touchstart", (e) => {
+        const now = Date.now();
+        if (now - touchStart < 300) {
+          e.preventDefault();
+          if (clickTimeout) clearTimeout(clickTimeout);
+          updateValue(-1);
+          touchStart = 0;
+        } else {
+          touchStart = now;
+          setTimeout(() => {
+            if (touchStart !== 0) {
+              updateValue(+1);
+              touchStart = 0;
+            }
+          }, 250);
+        }
+      }, { passive: true });
     });
-  }
-
-  // --- Final init and restore state on load ---
-  renderPlayerSelection();
-// --- Torbild Reset Button (nur Marker + Timeboxen) ---
-const torbildResetBtn = document.getElementById("resetTorbildBtn");
-
-if (torbildResetBtn) {
-  torbildResetBtn.addEventListener("click", () => {
-    const sicher = confirm("Goalmarkers zurücksetzen?");
-    if (!sicher) return;
-
-    // 1️⃣ Alle Marker entfernen
-    document.querySelectorAll(".marker-dot").forEach(d => d.remove());
-
-    // 2️⃣ Timeboxen auf 0 zurücksetzen
-    if (timeTrackingBox) {
-      let timeData = JSON.parse(localStorage.getItem("timeData")) || {};
-      timeTrackingBox.querySelectorAll(".period").forEach(period => {
-        const periodNum = period.dataset.period || Math.random().toString(36).slice(2,6);
-        period.querySelectorAll(".time-btn").forEach((btn, idx) => {
-          btn.textContent = 0;
-          if (!timeData[periodNum]) timeData[periodNum] = {};
-          timeData[periodNum][idx] = 0;
-        });
-      });
-      localStorage.setItem("timeData", JSON.stringify(timeData));
-    }
   });
 }
 
-  const lastPage = localStorage.getItem("currentPage") || (selectedPlayers.length ? "stats" : "selection");
-  if (lastPage === "stats") {
-    showPage("stats");
-    renderStatsTable();
-    updateIceTimeColors();
-  } else {
-    showPage("selection");
-  }
+// --- Final init ---
+renderPlayerSelection();
 
-  // initial timer display
-  updateTimerDisplay();
+// --- Torbild Reset Button (nur Marker + Timeboxen) ---
+const torbildResetBtn = document.getElementById("resetTorbildBtn");
+if (torbildResetBtn) {
+  torbildResetBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-  // Save statsData on page unload for safety (still CSP-friendly)
-  window.addEventListener("beforeunload", () => {
-    try {
-      localStorage.setItem("statsData", JSON.stringify(statsData));
-      localStorage.setItem("selectedPlayers", JSON.stringify(selectedPlayers));
-      localStorage.setItem("playerTimes", JSON.stringify(playerTimes));
-      localStorage.setItem("timerSeconds", String(timerSeconds));
-    } catch (e) {
-      // ignore storage errors
-    }
+    const sicher = confirm("Goalmarkers zurücksetzen?");
+    if (!sicher) return;
+
+    // Marker entfernen
+    document.querySelectorAll(".marker-dot").forEach(dot => dot.remove());
+
+    // Time-Buttons zurücksetzen
+    document.querySelectorAll("#timeTrackingBox .time-btn").forEach(btn => {
+      btn.textContent = "0";
+    });
+
+    // Speicher löschen
+    localStorage.removeItem("goalMarkers");
+    localStorage.removeItem("timeData");
+
+    // Alert mit Frame-Delay (verhindert Freeze)
+    requestAnimationFrame(() => {
+      alert("Goalmarkers und Time-Buttons wurden erfolgreich zurückgesetzt.");
+    });
   });
+}
+
+// --- Restore previous page ---
+const lastPage = localStorage.getItem("currentPage") || (selectedPlayers.length ? "stats" : "selection");
+if (lastPage === "stats") {
+  showPage("stats");
+  renderStatsTable();
+  updateIceTimeColors();
+} else {
+  showPage("selection");
+}
+
+// Timeranzeige aktualisieren
+updateTimerDisplay();
+
+// --- Save data on unload ---
+window.addEventListener("beforeunload", () => {
+  try {
+    localStorage.setItem("statsData", JSON.stringify(statsData));
+    localStorage.setItem("selectedPlayers", JSON.stringify(selectedPlayers));
+    localStorage.setItem("playerTimes", JSON.stringify(playerTimes));
+    localStorage.setItem("timerSeconds", String(timerSeconds));
+  } catch (e) {
+    // ignore
+  }
+});
 
 }); // end DOMContentLoaded
