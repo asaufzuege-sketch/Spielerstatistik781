@@ -715,25 +715,20 @@ if (torbildResetBtn) {
     const sicher = confirm("Goalmarkers zurücksetzen?");
     if (!sicher) return;
 
-    // 1️⃣ Alle Marker entfernen
-    document.querySelectorAll(".marker-dot").forEach(d => d.remove());
+    // 🔹 1. Alle Marker-Punkte im Torbild entfernen
+    document.querySelectorAll(".marker-dot").forEach(dot => dot.remove());
 
-    // 2️⃣ Timeboxen auf 0 zurücksetzen
-    if (timeTrackingBox) {
-      let timeData = JSON.parse(localStorage.getItem("timeData")) || {};
-      timeTrackingBox.querySelectorAll(".period").forEach(period => {
-        const periodNum = period.dataset.period || Math.random().toString(36).slice(2,6);
-        period.querySelectorAll(".time-btn").forEach((btn, idx) => {
-          btn.textContent = 0;
-          if (!timeData[periodNum]) timeData[periodNum] = {};
-          timeData[periodNum][idx] = 0;
-        });
-      });
-      localStorage.setItem("timeData", JSON.stringify(timeData));
-    }
+    // 🔹 2. Alle Zahlen in den Time-Buttons auf 0 setzen
+    const timeButtons = document.querySelectorAll("#timeTrackingBox .time-btn");
+    timeButtons.forEach(btn => btn.textContent = "0");
+
+    // 🔹 3. (optional) gespeicherte Werte löschen
+    localStorage.removeItem("goalMarkers");
+    localStorage.removeItem("timeData");
+
+    alert("Goalmarkers und Time-Buttons wurden zurückgesetzt.");
   });
-}
-        // Desktop click with double-click detection -> double = -1, single = +1
+}        // Desktop click with double-click detection -> double = -1, single = +1
         btn.addEventListener("click", () => {
           const now = Date.now();
           const diff = now - lastTap;
