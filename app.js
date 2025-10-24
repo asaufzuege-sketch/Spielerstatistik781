@@ -711,26 +711,31 @@ function renderSeasonTable() {
 const torbildResetBtn = document.getElementById("resetTorbildBtn");
 
 if (torbildResetBtn) {
-  torbildResetBtn.addEventListener("click", () => {
+  torbildResetBtn.addEventListener("click", (e) => {
+    e.preventDefault(); // verhindert eventuelle doppelte Trigger
+    e.stopPropagation();
+
     const sicher = confirm("Goalmarkers zurücksetzen?");
     if (!sicher) return;
 
-    // 🔹 1. Alle Marker-Punkte im Torbild entfernen
-    document.querySelectorAll(".marker-dot").forEach(dot => dot.remove());
+    // --- 1️⃣ Alle Marker-Punkte im Torbild entfernen ---
+    const markers = document.querySelectorAll(".marker-dot");
+    markers.forEach(dot => dot.remove());
 
-    // 🔹 2. Alle Zahlen in den Time-Buttons auf 0 setzen
+    // --- 2️⃣ Alle Zahlen in den Time-Buttons auf 0 setzen ---
     const timeButtons = document.querySelectorAll("#timeTrackingBox .time-btn");
     timeButtons.forEach(btn => btn.textContent = "0");
 
-    // 🔹 3. (optional) gespeicherte Werte löschen
+    // --- 3️⃣ Lokale Speicherwerte löschen (nur Torbild-relevant) ---
     localStorage.removeItem("goalMarkers");
     localStorage.removeItem("timeData");
 
-    // 🔹 4. Meldung erst NACH dem visuellen Update zeigen
-    setTimeout(() => {
-      alert("Goalmarkers und Time-Buttons wurden zurückgesetzt.");
-    }, 50);
+    // --- 4️⃣ Erfolgsmeldung erst NACH DOM-Update anzeigen ---
+    requestAnimationFrame(() => {
+      alert("Goalmarkers und Time-Buttons wurden erfolgreich zurückgesetzt.");
+    });
   });
+}
 } }        // Desktop click with double-click detection -> double = -1, single = +1
         btn.addEventListener("click", () => {
           const now = Date.now();
